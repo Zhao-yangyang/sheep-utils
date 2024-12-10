@@ -18,6 +18,7 @@ import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import { handleError } from "@/lib/error"
 import { ErrorMessage } from "@/components/ui/error-message"
 import { AppError } from "@/types/error"
+import { getExifData } from '@/lib/exif';
 
 export function ImageUpload() {
   const [images, setImages] = useState<ImageFile[]>([])
@@ -43,31 +44,25 @@ export function ImageUpload() {
         try {
           validateImageFile(file)
           const { preview, size } = await createImagePreview(file)
-          return { file, preview, size }
+          const exifData = await getExifData(file); // 获取 EXIF 数据
+          return { file, preview, size, exifData } // 返回 EXIF 数据
         } catch (err) {
           const error = handleError(err)
           setError(error)
           toast({
             title: error.message,
-            description: error.suggestion,
-            variant: "destructive",
           })
-          return null
+          return null; // 返回 null 以便过滤
         }
       })
-      
-      const results = await Promise.all(promises)
-      newImages.push(...results.filter((r): r is ImageFile => r !== null))
+      const results = await Promise.all(promises);
+      const validImages = results.filter(Boolean) as ImageFile[]; // Type assertion to ImageFile[]
+      if (validImages.length > 0) {
+        newImages.push(...validImages);
+      }
     }
-
-    if (newImages.length > 0) {
-      setImages((prev) => [...prev, ...newImages])
-      toast({
-        title: "添加成功",
-        description: `成功添加 ${newImages.length} 张图片`,
-      })
-    }
-  }, [setError, setImages, toast])
+    setImages(newImages); // 更新状态
+  }, [toast]);
 
   const handleConvert = async (format: string, mime: string) => {
     if (selectedIndex === -1) return
@@ -423,6 +418,7 @@ export function ImageUpload() {
             }
           }}
           src={previewImage}
+          exifData={images[selectedIndex]?.exifData} // 传递 EXIF 数据
         />
       </div>
     </Card>

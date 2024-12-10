@@ -11,16 +11,27 @@ import Image from "next/image"
 import { ZoomIn, ZoomOut, RotateCw } from "lucide-react"
 import { useState } from "react"
 
+interface ExifData {
+  Make: string
+  Model: string
+  DateTime: string
+  ExposureTime: string
+  FNumber: string
+  ISO: string
+}
+
 interface PreviewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   src: string | null
+  exifData?: ExifData
 }
 
 export function PreviewDialog({
   open,
   onOpenChange,
   src,
+  exifData,
 }: PreviewDialogProps) {
   const [scale, setScale] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -61,6 +72,15 @@ export function PreviewDialog({
               priority
             />
           </div>
+          {exifData && (
+            <div className="absolute bottom-0 left-0 bg-white p-2 text-sm">
+              <p>相机: {exifData.Make} {exifData.Model}</p>
+              <p>拍摄时间: {exifData.DateTime}</p>
+              <p>曝光时间: {exifData.ExposureTime}</p>
+              <p>光圈: f/{exifData.FNumber}</p>
+              <p>ISO: {exifData.ISO}</p>
+            </div>
+          )}
         </div>
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-black/50 p-2">
           <Button
@@ -91,4 +111,4 @@ export function PreviewDialog({
       </DialogContent>
     </Dialog>
   )
-} 
+}

@@ -2,6 +2,7 @@ export interface ImageFile {
   file: File
   preview: string
   size: { width: number; height: number }
+  exifData?: ExifData // 新增 EXIF 数据
 }
 
 export interface ProcessOptions {
@@ -16,4 +17,4 @@ export interface ProcessOptions {
 export interface ProcessedFile {
   name: string
   blob: Blob
-} 
+}

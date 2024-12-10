@@ -6,10 +6,10 @@ export interface ExifData {
   DateTime?: string          // 拍摄时间
   
   // 拍摄参数
-  ExposureTime?: number      // 曝光时间
+  ExposureTime?: string      // 曝光时间
   FNumber?: number           // 光圈值
   ISO?: number               // ISO 感光度
-  FocalLength?: number       // 焦距
+  FocalLength?: string       // 焦距
   
   // 图像信息
   ExifImageWidth?: number    // 原始宽度
@@ -19,6 +19,7 @@ export interface ExifData {
   // GPS信息
   latitude?: number          // 纬度
   longitude?: number         // 经度
+  location?: string          // 位置
   
   // 其他
   Copyright?: string         // 版权信息

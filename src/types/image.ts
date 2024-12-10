@@ -1,3 +1,5 @@
+import { ExifData } from './exif';
+
 export interface ImageFile {
   file: File
   preview: string

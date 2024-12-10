@@ -5,20 +5,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { ZoomIn, ZoomOut, RotateCw } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCw, Info } from "lucide-react"
 import { useState } from "react"
-
-interface ExifData {
-  Make: string
-  Model: string
-  DateTime: string
-  ExposureTime: string
-  FNumber: string
-  ISO: string
-}
+import { ExifData } from '@/types/exif';
+import { ExifInfoPanel } from "./exif-info-panel"
 
 interface PreviewDialogProps {
   open: boolean
@@ -33,8 +27,12 @@ export function PreviewDialog({
   src,
   exifData,
 }: PreviewDialogProps) {
+  console.log('PreviewDialog exifData:', exifData);
+  console.log('Has EXIF data:', exifData && Object.keys(exifData).length > 0);
+
   const [scale, setScale] = useState(1)
   const [rotation, setRotation] = useState(0)
+  const [showExif, setShowExif] = useState(false)
 
   if (!src) return null
 
@@ -55,6 +53,7 @@ export function PreviewDialog({
       <DialogContent className="max-w-screen-lg max-h-[90vh] p-0">
         <DialogHeader className="sr-only">
           <DialogTitle>图片预览</DialogTitle>
+          <DialogDescription>查看和编辑图片</DialogDescription>
         </DialogHeader>
         <div className="relative h-[80vh] w-full overflow-hidden bg-black/5">
           <div
@@ -72,41 +71,46 @@ export function PreviewDialog({
               priority
             />
           </div>
-          {exifData && (
-            <div className="absolute bottom-0 left-0 bg-white p-2 text-sm">
-              <p>相机: {exifData.Make} {exifData.Model}</p>
-              <p>拍摄时间: {exifData.DateTime}</p>
-              <p>曝光时间: {exifData.ExposureTime}</p>
-              <p>光圈: f/{exifData.FNumber}</p>
-              <p>ISO: {exifData.ISO}</p>
-            </div>
-          )}
-        </div>
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-black/50 p-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-            onClick={handleZoomOut}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-            onClick={handleZoomIn}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-white hover:bg-white/20"
-            onClick={handleRotate}
-          >
-            <RotateCw className="h-4 w-4" />
-          </Button>
+          {showExif && <ExifInfoPanel exifData={exifData} onClose={() => setShowExif(false)} />}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-black/50 p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20"
+              onClick={handleZoomOut}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20"
+              onClick={handleZoomIn}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-white hover:bg-white/20"
+              onClick={handleRotate}
+            >
+              <RotateCw className="h-4 w-4" />
+            </Button>
+            {exifData && Object.keys(exifData).length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/20 relative"
+                onClick={() => setShowExif(!showExif)}
+              >
+                <Info className="h-4 w-4" />
+                {showExif && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

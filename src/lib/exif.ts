@@ -1,39 +1,127 @@
 import EXIF from 'exifr';
 import { ExifData } from '@/types/exif';
 
+interface LocationResponse {
+    display_name: string;
+}
+
+interface ExifRawData {
+    ImageWidth?: number;
+    ImageHeight?: number;
+    Make?: string;
+    Model?: string;
+    Software?: string;
+    DateTime?: string;
+    ExposureTime?: number;
+    FNumber?: number;
+    ISO?: number;
+    FocalLength?: number;
+    ExifImageWidth?: number;
+    ExifImageHeight?: number;
+    Orientation?: number;
+    latitude?: number;
+    longitude?: number;
+    Copyright?: string;
+    Artist?: string;
+}
+
 export async function getExifData(file: File): Promise<ExifData> {
     const exifData: ExifData = {};
     try {
-        const data = await EXIF.parseGeotagged(file);
-        if (data) {
-            // 读取基本信息
-            exifData.Make = data.Make;
-            exifData.Model = data.Model;
-            exifData.Software = data.Software;
-            exifData.DateTime = data.DateTime;
-            
-            // 读取拍摄参数
-            exifData.ExposureTime = data.ExposureTime;
-            exifData.FNumber = data.FNumber;
-            exifData.ISO = data.ISO;
-            exifData.FocalLength = data.FocalLength;
-            
-            // 读取图像信息
-            exifData.ExifImageWidth = data.ExifImageWidth;
-            exifData.ExifImageHeight = data.ExifImageHeight;
-            exifData.Orientation = data.Orientation;
-            
-            // 读取GPS信息
+        // 使用 exifr 的 parse 方法获取所有 EXIF 数据
+        const data = await EXIF.parse(file, {
+            // 启用所有可能的选项
+            tiff: true,
+            exif: true,
+            gps: true,
+            ifd1: true,
+            interop: true,
+            // 转换值为可读格式
+            translateKeys: true,
+            translateValues: true,
+            reviveValues: true,
+        }) as ExifRawData;
+
+        console.log('Raw EXIF data:', data);
+        
+        if (!data) {
+            return exifData;
+        }
+        
+        // 图像信息 - 从原始数据中获取
+        if (data.ImageWidth) exifData.ExifImageWidth = data.ImageWidth;
+        if (data.ImageHeight) exifData.ExifImageHeight = data.ImageHeight;
+        
+        // 基本信息
+        if (data.Make) exifData.Make = data.Make;
+        if (data.Model) exifData.Model = data.Model;
+        if (data.Software) exifData.Software = data.Software;
+        if (data.DateTime) exifData.DateTime = formatExifDateTime(data.DateTime);
+        
+        // 拍摄参数
+        if (data.ExposureTime) exifData.ExposureTime = formatExposureTime(data.ExposureTime);
+        if (data.FNumber) exifData.FNumber = data.FNumber;
+        if (data.ISO) exifData.ISO = data.ISO;
+        if (data.FocalLength) exifData.FocalLength = formatFocalLength(data.FocalLength);
+        
+        // 图像信息
+        if (data.ExifImageWidth) exifData.ExifImageWidth = data.ExifImageWidth;
+        if (data.ExifImageHeight) exifData.ExifImageHeight = data.ExifImageHeight;
+        if (data.Orientation) exifData.Orientation = data.Orientation;
+        
+        // GPS信息
+        if (data.latitude && data.longitude) {
             exifData.latitude = data.latitude;
             exifData.longitude = data.longitude;
-            
-            // 读取其他信息
-            exifData.Copyright = data.Copyright;
-            exifData.Artist = data.Artist;
+            exifData.location = await getLocationName(data.latitude, data.longitude);
         }
+        
+        // 其他信息
+        if (data.Copyright) exifData.Copyright = data.Copyright;
+        if (data.Artist) exifData.Artist = data.Artist;
+        
     } catch (error) {
         console.error('Error reading EXIF data:', error);
-        return exifData; // 返回空的 EXIF 数据对象
     }
     return exifData;
+}
+
+// 辅助格式化函数
+function formatExifDateTime(datetime: string | undefined): string {
+    if (!datetime) return '';
+    try {
+        return new Date(datetime).toLocaleString();
+    } catch {
+        return '';
+    }
+}
+
+function formatExposureTime(time: number | undefined): string {
+    if (!time) return '';
+    try {
+        return time < 1 ? `1/${Math.round(1/time)}` : time.toString();
+    } catch {
+        return '';
+    }
+}
+
+function formatFocalLength(length: number | undefined): string {
+    if (!length) return '';
+    try {
+        return `${length}mm`;
+    } catch {
+        return '';
+    }
+}
+
+async function getLocationName(lat: number, lng: number): Promise<string> {
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        );
+        const data = await response.json() as LocationResponse;
+        return data.display_name || '';
+    } catch {
+        return '';
+    }
 }

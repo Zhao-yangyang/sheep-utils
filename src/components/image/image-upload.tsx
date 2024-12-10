@@ -32,37 +32,27 @@ export function ImageUpload() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [error, setError] = useState<AppError | null>(null)
 
-  const handleFiles = useCallback(async (files: FileList) => {
-    // 限制并发处理数量
-    const CONCURRENT_LIMIT = 3
-    const newImages: ImageFile[] = []
-    const fileArray = Array.from(files)
-    
-    for (let i = 0; i < fileArray.length; i += CONCURRENT_LIMIT) {
-      const batch = fileArray.slice(i, i + CONCURRENT_LIMIT)
-      const promises = batch.map(async (file) => {
-        try {
-          validateImageFile(file)
-          const { preview, size } = await createImagePreview(file)
-          const exifData = await getExifData(file); // 获取 EXIF 数据
-          return { file, preview, size, exifData } // 返回 EXIF 数据
-        } catch (err) {
-          const error = handleError(err)
-          setError(error)
-          toast({
-            title: error.message,
-          })
-          return null; // 返回 null 以便过滤
+  const handleFilesAdded = useCallback(async (files: FileList) => {
+    try {
+        const newImages: ImageFile[] = [];
+        for (const file of Array.from(files)) {
+            // 验证文件
+            validateImageFile(file);
+            
+            // 创建预览
+            const { preview, size } = await createImagePreview(file);
+            
+            // 读取EXIF数据
+            const exifData = await getExifData(file);
+            console.log('EXIF data:', exifData);
+            
+            newImages.push({ file, preview, size, exifData });
         }
-      })
-      const results = await Promise.all(promises);
-      const validImages = results.filter(Boolean) as ImageFile[]; // Type assertion to ImageFile[]
-      if (validImages.length > 0) {
-        newImages.push(...validImages);
-      }
+        setImages(prev => [...prev, ...newImages]);
+    } catch (error) {
+        handleError(error);
     }
-    setImages(newImages); // 更新状态
-  }, [toast]);
+  }, []);
 
   const handleConvert = async (format: string, mime: string) => {
     if (selectedIndex === -1) return
@@ -275,7 +265,7 @@ export function ImageUpload() {
         if (file) files.push(file)
       }
 
-      await handleFiles(
+      await handleFilesAdded(
         Object.assign(files, { item: (i: number) => files[i] }) as FileList
       )
 
@@ -292,7 +282,7 @@ export function ImageUpload() {
         variant: "destructive",
       })
     }
-  }, [handleFiles, setError, toast])
+  }, [handleFilesAdded, setError, toast])
 
   // 更新 useEffect 的依赖数组
   useEffect(() => {
@@ -302,11 +292,23 @@ export function ImageUpload() {
     }
   }, [handlePaste])
 
+  const handlePreview = (preview: string) => {
+    const image = images[selectedIndex];
+    console.log('Preview image EXIF:', image?.exifData);
+    console.log('Selected index:', selectedIndex);
+    console.log('Current images:', images);
+    const index = images.findIndex(img => img.preview === preview);
+    if (index !== -1) {
+      setSelectedIndex(index);
+    }
+    setPreviewImage(preview);
+  };
+
   return (
     <Card className="w-full max-w-3xl p-6">
       <div className="flex flex-col gap-6">
         <div className="flex items-start gap-8">
-          <DragDropZone onFilesDrop={handleFiles} className="flex-1" />
+          <DragDropZone onFilesDrop={handleFilesAdded} className="flex-1" />
           <div className="pt-2">
             <KeyboardShortcuts />
           </div>
@@ -324,7 +326,7 @@ export function ImageUpload() {
                   setSelectedIndex(index)
                 }
               }}
-              onPreview={(preview) => setPreviewImage(preview)}
+              onPreview={(preview) => handlePreview(preview)}
               onDelete={(index) => {
                 setImages((prev) => {
                   const newImages = prev.filter((_, i) => i !== index)
@@ -371,7 +373,7 @@ export function ImageUpload() {
               <div className="flex gap-4">
                 <Button onClick={() => setShowFormatDialog(true)}>转换格式</Button>
                 <Button onClick={() => setShowCompressDialog(true)}>压缩图片</Button>
-                <Button onClick={() => setShowResizeDialog(true)}>调整大小</Button>
+                <Button onClick={() => setShowResizeDialog(true)}>调整尺寸</Button>
               </div>
             )}
           </>
@@ -410,16 +412,14 @@ export function ImageUpload() {
             processType={batchProcessType}
           />
         )}
-        <PreviewDialog
-          open={!!previewImage}
-          onOpenChange={(open) => {
-            if (!open) {
-              setPreviewImage(null)
-            }
-          }}
-          src={previewImage}
-          exifData={images[selectedIndex]?.exifData} // 传递 EXIF 数据
-        />
+        {previewImage && (
+          <PreviewDialog
+            open={!!previewImage}
+            onOpenChange={(open) => !open && setPreviewImage(null)}
+            src={previewImage}
+            exifData={selectedIndex >= 0 ? images[selectedIndex].exifData : undefined}
+          />
+        )}
       </div>
     </Card>
   )

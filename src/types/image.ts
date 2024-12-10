@@ -11,4 +11,9 @@ export interface ProcessOptions {
   width?: number         // 用于调整尺寸
   height?: number        // 用于调整尺寸
   maintainAspectRatio?: boolean  // 用于调整尺寸
+}
+
+export interface ProcessedFile {
+  name: string
+  blob: Blob
 } 

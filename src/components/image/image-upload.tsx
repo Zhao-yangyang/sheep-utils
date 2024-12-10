@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { FormatConvertDialog } from "./format-convert-dialog"
 import { CompressDialog } from "./compress-dialog"
 import { ResizeDialog } from "./resize-dialog"
@@ -15,6 +15,9 @@ import { validateImageFile, createImagePreview } from "@/lib/image"
 import { SortableImageGrid } from "./sortable-image-grid"
 import { useHotkeys } from "react-hotkeys-hook"
 import { KeyboardShortcuts } from "./keyboard-shortcuts"
+import { handleError } from "@/lib/error"
+import { ErrorMessage } from "@/components/ui/error-message"
+import { AppError } from "@/types/error"
 
 export function ImageUpload() {
   const [images, setImages] = useState<ImageFile[]>([])
@@ -26,22 +29,35 @@ export function ImageUpload() {
   const [batchProcessType, setBatchProcessType] = useState<"convert" | "compress" | "resize" | null>(null)
   const { toast } = useToast()
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [error, setError] = useState<AppError | null>(null)
 
-  const handleFiles = async (files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
+    // 限制并发处理数量
+    const CONCURRENT_LIMIT = 3
     const newImages: ImageFile[] = []
+    const fileArray = Array.from(files)
     
-    for (const file of Array.from(files)) {
-      try {
-        validateImageFile(file)
-        const { preview, size } = await createImagePreview(file)
-        newImages.push({ file, preview, size })
-      } catch (err) {
-        toast({
-          title: "添加失败",
-          description: err instanceof Error ? err.message : "文件处理失败",
-          variant: "destructive",
-        })
-      }
+    for (let i = 0; i < fileArray.length; i += CONCURRENT_LIMIT) {
+      const batch = fileArray.slice(i, i + CONCURRENT_LIMIT)
+      const promises = batch.map(async (file) => {
+        try {
+          validateImageFile(file)
+          const { preview, size } = await createImagePreview(file)
+          return { file, preview, size }
+        } catch (err) {
+          const error = handleError(err)
+          setError(error)
+          toast({
+            title: error.message,
+            description: error.suggestion,
+            variant: "destructive",
+          })
+          return null
+        }
+      })
+      
+      const results = await Promise.all(promises)
+      newImages.push(...results.filter((r): r is ImageFile => r !== null))
     }
 
     if (newImages.length > 0) {
@@ -51,7 +67,7 @@ export function ImageUpload() {
         description: `成功添加 ${newImages.length} 张图片`,
       })
     }
-  }
+  }, [setError, setImages, toast])
 
   const handleConvert = async (format: string, mime: string) => {
     if (selectedIndex === -1) return
@@ -94,10 +110,11 @@ export function ImageUpload() {
         description: `图片已转换为 ${format.toUpperCase()} 格式`,
       })
     } catch (err) {
-      console.error(err)
+      const error = handleError(err)
+      setError(error)
       toast({
-        title: "转换失败",
-        description: "图片转换过程中出现错误",
+        title: error.message,
+        description: error.suggestion,
         variant: "destructive",
       })
     }
@@ -144,10 +161,11 @@ export function ImageUpload() {
         description: `原大小：${(images[selectedIndex].file.size / 1024 / 1024).toFixed(2)}MB，压缩后：${(blob.size / 1024 / 1024).toFixed(2)}MB`,
       })
     } catch (err) {
-      console.error(err)
+      const error = handleError(err)
+      setError(error)
       toast({
-        title: "压缩失败",
-        description: "图片压缩过程中出现错误",
+        title: error.message,
+        description: error.suggestion,
         variant: "destructive",
       })
     }
@@ -210,10 +228,11 @@ export function ImageUpload() {
         description: `图片尺寸已调整为 ${finalWidth} x ${finalHeight}`,
       })
     } catch (err) {
-      console.error(err)
+      const error = handleError(err)
+      setError(error)
       toast({
-        title: "调整失败",
-        description: "图片尺寸调整过程中出现错误",
+        title: error.message,
+        description: error.suggestion,
         variant: "destructive",
       })
     }
@@ -243,12 +262,59 @@ export function ImageUpload() {
     }
   }, [selectedIndex, images.length])
 
+  // 使用 useCallback 包装 handlePaste 函数
+  const handlePaste = useCallback(async (e: ClipboardEvent) => {
+    try {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      const imageItems = Array.from(items).filter(
+        item => item.type.startsWith('image/')
+      )
+
+      if (imageItems.length === 0) return
+
+      const files: File[] = []
+      for (const item of imageItems) {
+        const file = item.getAsFile()
+        if (file) files.push(file)
+      }
+
+      await handleFiles(
+        Object.assign(files, { item: (i: number) => files[i] }) as FileList
+      )
+
+      toast({
+        title: "粘贴成功",
+        description: `已从剪贴板添加 ${files.length} 张图片`,
+      })
+    } catch (err) {
+      const error = handleError(err)
+      setError(error)
+      toast({
+        title: error.message,
+        description: error.suggestion,
+        variant: "destructive",
+      })
+    }
+  }, [handleFiles, setError, toast])
+
+  // 更新 useEffect 的依赖数组
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste)
+    return () => {
+      document.removeEventListener('paste', handlePaste)
+    }
+  }, [handlePaste])
+
   return (
     <Card className="w-full max-w-3xl p-6">
       <div className="flex flex-col gap-6">
-        <div className="flex items-start gap-4">
-          <DragDropZone onFilesDrop={handleFiles} />
-          {images.length > 0 && <KeyboardShortcuts />}
+        <div className="flex items-start gap-8">
+          <DragDropZone onFilesDrop={handleFiles} className="flex-1" />
+          <div className="pt-2">
+            <KeyboardShortcuts />
+          </div>
         </div>
         {images.length > 0 && (
           <>
@@ -257,7 +323,6 @@ export function ImageUpload() {
               selectedIndex={selectedIndex}
               onImagesChange={setImages}
               onSelect={(index) => {
-                // 如果点击的是已选中的图片，则取消选中
                 if (index === selectedIndex) {
                   setSelectedIndex(-1)
                 } else {
@@ -268,11 +333,9 @@ export function ImageUpload() {
               onDelete={(index) => {
                 setImages((prev) => {
                   const newImages = prev.filter((_, i) => i !== index)
-                  // 如果删除的是最后一张图片，或者删除的是选中的图片
                   if (index === selectedIndex || newImages.length === 0) {
                     setSelectedIndex(-1)
                   } else if (index < selectedIndex) {
-                    // 如果删除的图片在选中图片之前，选中索引需要减1
                     setSelectedIndex(selectedIndex - 1)
                   }
                   return newImages
@@ -317,6 +380,9 @@ export function ImageUpload() {
               </div>
             )}
           </>
+        )}
+        {error && (
+          <ErrorMessage error={error} />
         )}
         {selectedIndex !== -1 && (
           <>

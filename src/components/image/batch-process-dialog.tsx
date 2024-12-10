@@ -22,10 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useState, useEffect, useCallback } from "react"
-import { ImageFile } from "@/types/image"
+import { ImageFile, ProcessedFile } from "@/types/image"
 import { downloadZip } from "@/lib/download"
 import { useToast } from "@/hooks/use-toast"
 import NextImage from "next/image"
+import { handleError } from "@/lib/error"
+import { ErrorMessage } from "@/components/ui/error-message"
+import { AppError } from "@/types/error"
+import { createError } from "@/lib/error"
 
 const FORMAT_OPTIONS = [
   { value: "png", label: "PNG", mime: "image/png" },
@@ -68,9 +72,10 @@ export function BatchProcessDialog({
   const [processing, setProcessing] = useState(false)
   const [currentFile, setCurrentFile] = useState<string>("")
   const [currentStatus, setCurrentStatus] = useState<string>("")
-  const [failedFiles, setFailedFiles] = useState<{ name: string; error: string }[]>([])
+  const [failedFiles, setFailedFiles] = useState<{ name: string; error: AppError }[]>([])
+  const [error, setError] = useState<AppError | null>(null)
   
-  // 格式转换选项
+  // 转换选项
   const [format, setFormat] = useState<string>("png")
   
   // 压缩选项
@@ -126,16 +131,19 @@ export function BatchProcessDialog({
     }
   }
 
-  const handleProcess = async () => {
+  const handleProcess = useCallback(async () => {
     setProcessing(true)
     setProgress(0)
-    setFailedFiles([])
-
+    
     try {
-      const files: { name: string; blob: Blob }[] = []
-      let current = 0
-
-      for (const image of images) {
+      const files: ProcessedFile[] = []
+      
+      for (let i = 0; i < images.length; i++) {
+        // 更新进度
+        setProgress((i / images.length) * 100)
+        
+        // 处理图片
+        const image = images[i]
         setCurrentFile(image.file.name)
         setCurrentStatus("加载中...")
 
@@ -196,7 +204,7 @@ export function BatchProcessDialog({
 
               // 更新进度信息，包含压缩比
               toast({
-                title: `处理第 ${current + 1}/${images.length} 张`,
+                title: `处理第 ${i + 1}/${images.length} 张`,
                 description: `压缩率：${compressionRatio}%（${(originalSize / 1024 / 1024).toFixed(1)}MB → ${(compressedSize / 1024 / 1024).toFixed(1)}MB）`,
               })
               break
@@ -242,22 +250,26 @@ export function BatchProcessDialog({
               })
               break
           }
-
-          current++
-          setProgress((current / images.length) * 100)
         } catch (err) {
+          const error = handleError(err)
           setFailedFiles(prev => [...prev, { 
             name: image.file.name, 
-            error: err instanceof Error ? err.message : "处理失败" 
+            error
           }])
         }
       }
 
+      setProgress(100)
+
       if (failedFiles.length > 0) {
-        // 有失败的文件，显示错误信息
+        const error = createError(
+          "PROCESS_FAILED", 
+          `成功：${files.length}，失败：${failedFiles.length}张`
+        )
+        setError(error)
         toast({
-          title: "部分文件处理失败",
-          description: `成功：${files.length}张，失败：${failedFiles.length}张`,
+          title: error.message,
+          description: error.suggestion,
           variant: "destructive",
         })
       } else {
@@ -283,10 +295,11 @@ export function BatchProcessDialog({
         })
       }
     } catch (err) {
-      console.error(err)
+      const error = handleError(err)
+      setError(error)
       toast({
-        title: "处理失败",
-        description: "处理过程中出现错误",
+        title: error.message,
+        description: error.suggestion,
         variant: "destructive",
       })
     } finally {
@@ -294,7 +307,18 @@ export function BatchProcessDialog({
       setCurrentFile("")
       setCurrentStatus("")
     }
-  }
+  }, [
+    images,
+    processType,
+    format,
+    quality,
+    width,
+    height,
+    maintainAspectRatio,
+    onOpenChange,
+    toast,
+    failedFiles.length
+  ])
 
   // 生成预览图
   const generatePreview = useCallback(async () => {
@@ -395,7 +419,7 @@ export function BatchProcessDialog({
         URL.revokeObjectURL(previewImage.processed)
       }
     }
-  }, [])
+  }, [previewImage?.processed])
 
   // 参数改变时更新预览
   useEffect(() => {
@@ -446,7 +470,7 @@ export function BatchProcessDialog({
                 step={1}
               />
               <p className="text-sm text-muted-foreground">
-                质量越低，文件越小，但图片可能会失真
+                质量越低，文件越小，但片可能会失真
               </p>
             </div>
           )}
@@ -537,13 +561,16 @@ export function BatchProcessDialog({
               </div>
             </div>
           )}
+          {error && (
+            <ErrorMessage error={error} />
+          )}
           {failedFiles.length > 0 && (
             <div className="mt-4 space-y-2">
               <p className="text-sm font-medium text-destructive">处理失败的文件：</p>
               <div className="max-h-32 overflow-y-auto space-y-1">
-                {failedFiles.map(file => (
-                  <p key={file.name} className="text-xs text-muted-foreground">
-                    {file.name}：{file.error}
+                {failedFiles.map(({ name, error }) => (
+                  <p key={name} className="text-xs text-muted-foreground">
+                    {name}：{error.message}
                   </p>
                 ))}
               </div>

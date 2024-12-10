@@ -1,3 +1,5 @@
+import { createError } from "./error"
+
 export const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 export const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -9,11 +11,17 @@ export const ACCEPTED_IMAGE_TYPES = [
 
 export function validateImageFile(file: File) {
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`文件大小不能超过${MAX_FILE_SIZE / 1024 / 1024}MB`)
+    throw createError(
+      "FILE_SIZE_EXCEEDED",
+      `文件大小：${formatFileSize(file.size)}`
+    )
   }
   
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    throw new Error("不支持的文件格式")
+    throw createError(
+      "INVALID_FILE_TYPE",
+      `文件类型：${file.type || "未知"}`
+    )
   }
 }
 

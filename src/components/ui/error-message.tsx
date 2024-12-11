@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react"
-import { AppError } from "@/types/error"
+import type { AppError } from "@/types/error"
 
 interface ErrorMessageProps {
   error: AppError

@@ -22,13 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useState, useEffect, useCallback } from "react"
-import { ImageFile, ProcessedFile } from "@/types/image"
+import type { ImageFile, ProcessedFile } from "@/types/image"
 import { downloadZip } from "@/lib/download"
 import { useToast } from "@/hooks/use-toast"
 import NextImage from "next/image"
 import { handleError } from "@/lib/error"
 import { ErrorMessage } from "@/components/ui/error-message"
-import { AppError } from "@/types/error"
+import type { AppError } from "@/types/error"
 import { createError } from "@/lib/error"
 
 const FORMAT_OPTIONS = [

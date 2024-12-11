@@ -9,7 +9,7 @@ import { ResizeDialog } from "./resize-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { DragDropZone } from "./drag-drop-zone"
 import { BatchProcessDialog } from "./batch-process-dialog"
-import { ImageFile } from "@/types/image"
+import type { ImageFile } from "@/types/image"
 import { PreviewDialog } from "./preview-dialog"
 import { validateImageFile, createImagePreview } from "@/lib/image"
 import { SortableImageGrid } from "./sortable-image-grid"
@@ -17,7 +17,7 @@ import { useHotkeys } from "react-hotkeys-hook"
 import { KeyboardShortcuts } from "./keyboard-shortcuts"
 import { handleError } from "@/lib/error"
 import { ErrorMessage } from "@/components/ui/error-message"
-import { AppError } from "@/types/error"
+import type { AppError } from "@/types/error"
 import { getExifData } from '@/lib/exif';
 
 export function ImageUpload() {
@@ -44,7 +44,6 @@ export function ImageUpload() {
             
             // 读取EXIF数据
             const exifData = await getExifData(file);
-            console.log('EXIF data:', exifData);
             
             newImages.push({ file, preview, size, exifData });
         }
@@ -270,7 +269,7 @@ export function ImageUpload() {
       )
 
       toast({
-        title: "粘贴成功",
+        title: "粘贴成���",
         description: `已从剪贴板添加 ${files.length} 张图片`,
       })
     } catch (err) {
@@ -293,10 +292,6 @@ export function ImageUpload() {
   }, [handlePaste])
 
   const handlePreview = (preview: string) => {
-    const image = images[selectedIndex];
-    console.log('Preview image EXIF:', image?.exifData);
-    console.log('Selected index:', selectedIndex);
-    console.log('Current images:', images);
     const index = images.findIndex(img => img.preview === preview);
     if (index !== -1) {
       setSelectedIndex(index);

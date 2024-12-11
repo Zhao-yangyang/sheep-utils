@@ -1,10 +1,10 @@
-import { ExifData } from './exif';
+import type { ExifData } from './exif';
 
 export interface ImageFile {
   file: File
   preview: string
   size: { width: number; height: number }
-  exifData?: ExifData // 新增 EXIF 数据
+  exifData?: ExifData
 }
 
 export interface ProcessOptions {

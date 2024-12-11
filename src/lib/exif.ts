@@ -1,5 +1,5 @@
 import EXIF from 'exifr';
-import { ExifData } from '@/types/exif';
+import type { ExifData } from '@/types/exif';
 
 interface LocationResponse {
     display_name: string;
@@ -45,8 +45,6 @@ export async function getExifData(file: File): Promise<ExifData> {
             reviveValues: true,
         }) as ExifRawData;
 
-        console.log('Raw EXIF data:', data);
-        
         if (!data) {
             return exifData;
         }
@@ -84,7 +82,9 @@ export async function getExifData(file: File): Promise<ExifData> {
         if (data.Artist) exifData.Artist = data.Artist;
         
     } catch (error) {
-        console.error('Error reading EXIF data:', error);
+        if (error instanceof Error) {
+            console.error('Error reading EXIF data:', error.message);
+        }
     }
     return exifData;
 }

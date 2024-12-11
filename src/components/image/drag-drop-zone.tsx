@@ -5,7 +5,7 @@ import { useState } from "react"
 import { ImageIcon } from "lucide-react"
 import { handleError } from "@/lib/error"
 import { ErrorMessage } from "@/components/ui/error-message"
-import { AppError } from "@/types/error"
+import type { AppError } from "@/types/error"
 
 interface DragDropZoneProps {
   onFilesDrop: (files: FileList) => void

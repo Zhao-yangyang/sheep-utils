@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
-import { ExifData } from "@/types/exif"
+import type { ExifData } from "@/types/exif"
 
 interface ExifInfoPanelProps {
   exifData?: ExifData

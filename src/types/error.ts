@@ -9,7 +9,7 @@ export interface AppError {
   type: ErrorType;
   message: string;
   details?: string;
-  suggestion?: string;
+  suggestion: string;
 }
 
 export interface ErrorResponse {

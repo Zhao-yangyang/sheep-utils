@@ -1,6 +1,7 @@
 'use client'
 
-import { Component, ErrorInfo, ReactNode } from 'react'
+import { Component } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
 
 interface Props {
   children?: ReactNode
@@ -19,8 +20,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true }
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo)
+  public componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
+    // 在生产环境中可以将错误发送到错误跟踪服务
   }
 
   public render() {

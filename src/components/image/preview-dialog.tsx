@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { ZoomIn, ZoomOut, RotateCw, Info } from "lucide-react"
 import { useState } from "react"
-import { ExifData } from '@/types/exif';
+import type { ExifData } from '@/types/exif';
 import { ExifInfoPanel } from "./exif-info-panel"
 
 interface PreviewDialogProps {
@@ -27,9 +27,6 @@ export function PreviewDialog({
   src,
   exifData,
 }: PreviewDialogProps) {
-  console.log('PreviewDialog exifData:', exifData);
-  console.log('Has EXIF data:', exifData && Object.keys(exifData).length > 0);
-
   const [scale, setScale] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [showExif, setShowExif] = useState(false)

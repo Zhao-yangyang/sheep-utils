@@ -1,4 +1,4 @@
-import { AppError, ErrorType } from "@/types/error"
+import type { AppError, ErrorType } from "@/types/error"
 
 const ERROR_MESSAGES: Record<ErrorType, string> = {
   FILE_SIZE_EXCEEDED: "文件大小超出限制",

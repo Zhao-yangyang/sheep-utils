@@ -1,13 +1,15 @@
 "use client"
 
+import type {
+  DragEndEvent
+} from '@dnd-kit/core';
 import { 
   DndContext, 
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
-  useSensors,
-  DragEndEvent
+  useSensors
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -17,7 +19,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ImageFile } from '@/types/image'
+import type { ImageFile } from '@/types/image'
 import { Button } from '@/components/ui/button'
 import { ImagePreview } from './image-preview'
 import { cn } from '@/lib/utils'

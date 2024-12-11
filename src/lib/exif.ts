@@ -25,6 +25,9 @@ interface ExifRawData {
     Artist?: string;
 }
 
+const NOMINATIM_CACHE = new Map<string, string>()
+const RATE_LIMIT_MS = 1000 // 1秒限制
+
 export async function getExifData(file: File): Promise<ExifData> {
     const exifData: ExifData = {};
     try {
@@ -115,13 +118,23 @@ function formatFocalLength(length: number | undefined): string {
 }
 
 async function getLocationName(lat: number, lng: number): Promise<string> {
+    const cacheKey = `${lat},${lng}`
+    if (NOMINATIM_CACHE.has(cacheKey)) {
+        return NOMINATIM_CACHE.get(cacheKey)!
+    }
+
+    // 添加延时以符合使用政策
+    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS))
+
     try {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-        );
-        const data = await response.json() as LocationResponse;
-        return data.display_name || '';
+        )
+        const data = await response.json() as LocationResponse
+        const location = data.display_name || ''
+        NOMINATIM_CACHE.set(cacheKey, location)
+        return location
     } catch {
-        return '';
+        return ''
     }
 }

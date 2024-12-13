@@ -9,7 +9,7 @@ export default function Home() {
           在线工具集
         </h1>
         <p className="max-w-[700px] text-lg text-muted-foreground md:text-xl">
-          提供图片处理、视频下载等在线工具，让您的工作更轻松。
+          提供图片处理、SVG 编辑等在线工具，让您的工作更轻松。
         </p>
       </div>
       <div className="flex gap-6">
@@ -17,7 +17,7 @@ export default function Home() {
           <Link href="/tools/image">图片工具</Link>
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="/tools/video">视频工具</Link>
+          <Link href="/svg-editor">SVG 工具</Link>
         </Button>
       </div>
     </div>

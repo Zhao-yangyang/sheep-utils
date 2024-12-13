@@ -30,7 +30,11 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}>
         <div className="relative flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1 container">{children}</main>
+          <main className="flex-1 flex justify-center">
+            <div className="container">
+              {children}
+            </div>
+          </main>
         </div>
         <Toaster />
       </body>

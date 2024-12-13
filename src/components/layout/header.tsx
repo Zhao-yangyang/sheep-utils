@@ -12,8 +12,8 @@ export function Header() {
             <Link href="/tools/image" className="transition-colors hover:text-foreground/80">
               图片工具
             </Link>
-            <Link href="/tools/video" className="transition-colors hover:text-foreground/80">
-              视频工具
+            <Link href="/svg-editor" className="transition-colors hover:text-foreground/80">
+              SVG 工具
             </Link>
           </nav>
         </div>

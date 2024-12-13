@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
-    domains: ['*'], // 或者指定具体的域名
+    unoptimized: true,
   },
   // 添加 OpenStreetMap 到 allowed domains
   async headers() {

@@ -34,6 +34,66 @@
 - `Ctrl+V` : 粘贴图片
 - `Ctrl+C` : 复制处理后的图片
 
+## SVG 工具功能
+
+### 基础功能
+- [x] SVG 代码编辑器（基于 Monaco Editor）
+- [x] 实时预览与编辑
+- [x] 支持拖拽上传 SVG 文件
+- [x] 支持剪贴板粘贴 SVG 代码（Ctrl+V）
+- [x] 代码格式化（基于 Prettier）
+
+### 编辑功能
+- [x] 语法高亮（XML/SVG）
+- [x] 代码格式化（支持快捷键）
+- [x] 自动换行
+- [x] 实时预览
+- [x] SVG 尺寸调整
+- [ ] SVG 优化（移除冗余代码）
+- [ ] 错误提示与代码补全
+
+### 导出功能
+- [x] 支持多种导出格式：SVG、PNG、JPEG
+- [x] 支持设置导出缩放比例
+- [x] 支持自定义背景色
+- [x] 一键导出功能
+- [ ] 批量导出
+- [ ] 导出预设管理
+
+### 键盘快捷键
+- [x] `Ctrl + S`: 导出 SVG 文件
+- [x] `Ctrl + Shift + P`: 格式化代码
+- [x] `Ctrl + V`: 粘贴 SVG 代码
+- [x] `Ctrl + Z`: 撤销（编辑器内置）
+- [x] `Ctrl + Shift + Z`: 重做（编辑器内置）
+
+### 开发计划
+
+#### 已完成
+- [x] 基础编辑器搭建
+- [x] 实时预览功能
+- [x] 文件上传功能
+- [x] 代码格式化
+- [x] 快捷键支持
+- [x] 多格式导出
+- [x] SVG 尺寸调整
+
+#### 进行中
+- [ ] 代码错误提示
+- [ ] SVG 路径编辑
+- [ ] SVG 元素树视图
+- [ ] 图层管理功能
+
+#### 待开发
+- [ ] SVG 动画编辑
+- [ ] SVG 优化工具
+- [ ] 批量处理功能
+- [ ] 模板系统
+- [ ] 协同编辑功能
+- [ ] 历史记录管理
+- [ ] 自定义快捷键
+- [ ] 导出预设管理
+
 ## 技术栈
 
 ### 核心框架
@@ -84,10 +144,13 @@
 - [ ] 图片滤镜功能
 - [ ] 图片水印功能
 - [ ] 图片智能裁剪
+- [ ] SVG 编辑器功能
+- [ ] SVG 导出功能
+- [ ] SVG 批量处理
 
 ### 待开发
 - [ ] 使用 Web Workers 处理大文件
-- [ ] 支持深色模式
+- [ ] 支持深色��式
 - [ ] 添加多语言支持（i18n）
 - [ ] 添加参数预设保存
 - [ ] 优化移动端体验
@@ -125,9 +188,10 @@ pnpm lint
 
 ## 部署
 
-本项目可以部署在 Vercel 平台上：
+本项目已部署在 Vercel 平台上：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/sheep-utils)
+- 在线预览：[https://sheep-utils.vercel.app](https://sheep-utils.vercel.app)
+- 一键部署：[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/sheep-utils)
 
 ## 贡献指南
 

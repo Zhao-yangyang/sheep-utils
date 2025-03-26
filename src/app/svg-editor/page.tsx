@@ -9,6 +9,7 @@ import { UploadZone } from "@/components/svg-editor/upload-zone";
 import { SettingsPanel } from "@/components/svg-editor/settings-panel";
 import { toast } from "@/hooks/use-toast";
 import { useHotkeys } from "react-hotkeys-hook";
+import pngToIco from 'png-to-ico';
 
 // 动态导入 Monaco 编辑器以避免 SSR 问题
 const MonacoEditor = dynamic(
@@ -108,7 +109,7 @@ export default function SvgEditorPage() {
     const url = URL.createObjectURL(svg);
     const img = new Image();
     
-    img.onload = () => {
+    img.onload = async () => {
       const canvas = document.createElement("canvas");
       
       // 对于 ICO 格式，强制使用 32x32 尺寸
@@ -132,32 +133,46 @@ export default function SvgEditorPage() {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(img, 0, 0, 32, 32);
-      } else {
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, 0, 0);
-      }
-      
-      // 对于 ICO 格式，我们导出为 PNG 并提供提示
-      if (format === 'ico') {
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "icon.png";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            toast({
-              title: "转换提示",
-              description: "已将 SVG 调整为 32x32 并导出为 PNG 格式。要获得真正的 ICO 文件，请使用专门的图标转换工具进行进一步处理。",
-            });
-          },
-          "image/png"
-        );
+
+        try {
+          // 首先将画布内容转换为 PNG
+          const pngBlob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error("PNG转换失败"));
+            }, 'image/png');
+          });
+
+          // 将 PNG Blob 转换为 Buffer
+          const buffer = await pngBlob.arrayBuffer();
+          
+          // 使用 png-to-ico 转换为 ICO 格式
+          const icoBuffer = await pngToIco(Buffer.from(buffer));
+          
+          // 创建 ICO Blob
+          const icoBlob = new Blob([icoBuffer], { type: 'image/x-icon' });
+          
+          // 下载文件
+          const url = URL.createObjectURL(icoBlob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "icon.ico";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "导出成功",
+            description: "SVG 已成功转换为 ICO 格式",
+          });
+        } catch {
+          toast({
+            title: "导出失败",
+            description: "ICO 格式转换失败，请确保 SVG 大小合适",
+            variant: "destructive",
+          });
+        }
       } else {
         canvas.toBlob(
           (blob) => {

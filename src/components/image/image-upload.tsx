@@ -19,7 +19,6 @@ import { handleError } from "@/lib/error"
 import { ErrorMessage } from "@/components/ui/error-message"
 import type { AppError } from "@/types/error"
 import { getExifData } from '@/lib/exif'
-import pngToIco from 'png-to-ico'
 
 export function ImageUpload() {
   const [images, setImages] = useState<ImageFile[]>([])
@@ -64,90 +63,37 @@ export function ImageUpload() {
       await new Promise((resolve) => (img.onload = resolve))
 
       const canvas = document.createElement("canvas")
-      
-      // 对于 ICO 格式，我们需要将图片调整为标准尺寸
-      if (format === 'ico') {
-        // ICO 通常使用 16x16, 32x32, 或 48x48
-        canvas.width = 32
-        canvas.height = 32
-      } else {
-        canvas.width = img.width
-        canvas.height = img.height
-      }
+      canvas.width = img.width
+      canvas.height = img.height
       
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("无法创建canvas上下文")
 
-      // 对于 ICO 格式，使用更好的缩放算法
-      if (format === 'ico') {
-        ctx.imageSmoothingEnabled = true
-        ctx.imageSmoothingQuality = "high"
-      }
-
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       
       // 转换格式
-      if (format === 'ico') {
-        try {
-          // 首先将图片转换为 PNG Buffer
-          const pngBlob = await new Promise<Blob>((resolve, reject) => {
-            canvas.toBlob((blob) => {
-              if (blob) resolve(blob)
-              else reject(new Error("PNG转换失败"))
-            }, 'image/png')
-          })
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error("转换失败"))
+        }, mime)
+      })
 
-          // 将 Blob 转换为 Buffer
-          const buffer = await pngBlob.arrayBuffer()
-          
-          // 使用 png-to-ico 转换为 ICO 格式
-          const icoBuffer = await pngToIco(Buffer.from(buffer))
-          
-          // 创建 Blob 对象
-          const icoBlob = new Blob([icoBuffer], { type: 'image/x-icon' })
-          
-          // 创建下载链接
-          const url = URL.createObjectURL(icoBlob)
-          const a = document.createElement("a")
-          a.href = url
-          a.download = `icon.ico`
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          URL.revokeObjectURL(url)
+      // 创建下载链接
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `converted.${format}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
 
-          setShowFormatDialog(false)
-          toast({
-            title: "转换成功",
-            description: "图片已成功转换为 ICO 格式",
-          })
-        } catch {
-          throw new Error("ICO格式转换失败，请确保图片大小合适")
-        }
-      } else {
-        const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob)
-            else reject(new Error("转换失败"))
-          }, mime)
-        })
-
-        // 创建下载链接
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `converted.${format}`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-
-        setShowFormatDialog(false)
-        toast({
-          title: "转换成功",
-          description: `图片已转换为 ${format.toUpperCase()} 格式`,
-        })
-      }
+      setShowFormatDialog(false)
+      toast({
+        title: "转换成功",
+        description: `图片已转换为 ${format.toUpperCase()} 格式`,
+      })
     } catch (err) {
       const error = handleError(err)
       setError(error)

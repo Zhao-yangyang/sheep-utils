@@ -22,7 +22,6 @@ const FORMAT_OPTIONS = [
   { value: "png", label: "PNG", mime: "image/png" },
   { value: "jpeg", label: "JPEG", mime: "image/jpeg" },
   { value: "webp", label: "WebP", mime: "image/webp" },
-  { value: "ico", label: "ICO", mime: "image/png" },
 ] as const
 
 interface FormatConvertDialogProps {

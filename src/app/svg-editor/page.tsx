@@ -90,7 +90,7 @@ export default function SvgEditorPage() {
   };
 
   // 导出图片
-  const handleExport = useCallback((format: 'svg' | 'png' | 'jpeg', scale: number, bgColor: string) => {
+  const handleExport = useCallback((format: 'svg' | 'png' | 'jpeg' | 'ico', scale: number, bgColor: string) => {
     if (format === "svg") {
       const blob = new Blob([svgCode], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
@@ -110,8 +110,15 @@ export default function SvgEditorPage() {
     
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+      
+      // 对于 ICO 格式，强制使用 32x32 尺寸
+      if (format === 'ico') {
+        canvas.width = 32;
+        canvas.height = 32;
+      } else {
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+      }
       
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -120,24 +127,54 @@ export default function SvgEditorPage() {
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, 0, 0);
+      // 对于 ICO 格式，使用更好的缩放算法
+      if (format === 'ico') {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, 32, 32);
+      } else {
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0);
+      }
       
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `image.${format}`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        },
-        `image/${format}`,
-        0.9
-      );
+      // 对于 ICO 格式，我们导出为 PNG 并提供提示
+      if (format === 'ico') {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "icon.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toast({
+              title: "转换提示",
+              description: "已将 SVG 调整为 32x32 并导出为 PNG 格式。要获得真正的 ICO 文件，请使用专门的图标转换工具进行进一步处理。",
+            });
+          },
+          "image/png"
+        );
+      } else {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `image.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          },
+          `image/${format}`,
+          0.9
+        );
+      }
     };
     
     img.src = url;
@@ -174,7 +211,7 @@ export default function SvgEditorPage() {
       if (!window.DOMParser || !window.XMLSerializer) {
         toast({
           title: "浏览器兼容性提示",
-          description: "您的浏览器���能不支持某些功能，建议使用最新版本的 Chrome、Firefox 或 Edge",
+          description: "您的浏览器能不支持某些功能，建议使用最新版本的 Chrome、Firefox 或 Edge",
           variant: "destructive",
         });
       }

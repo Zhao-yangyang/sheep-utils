@@ -63,36 +63,75 @@ export function ImageUpload() {
       await new Promise((resolve) => (img.onload = resolve))
 
       const canvas = document.createElement("canvas")
-      canvas.width = img.width
-      canvas.height = img.height
+      
+      // 对于 ICO 格式，我们需要将图片调整为标准尺寸
+      if (format === 'ico') {
+        // ICO 通常使用 16x16, 32x32, 或 48x48
+        canvas.width = 32
+        canvas.height = 32
+      } else {
+        canvas.width = img.width
+        canvas.height = img.height
+      }
+      
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("无法创建canvas上下文")
 
-      ctx.drawImage(img, 0, 0)
+      // 对于 ICO 格式，使用更好的缩放算法
+      if (format === 'ico') {
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = "high"
+      }
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       
       // 转换格式
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error("转换失败"))
-        }, mime)
+        if (format === 'ico') {
+          // 对于 ICO 格式，我们需要先转换为 PNG
+          canvas.toBlob((pngBlob) => {
+            if (pngBlob) {
+              // 这里需要添加将 PNG 转换为 ICO 的逻辑
+              // 由于浏览器原生不支持 ICO 格式，我们需要使用专门的库
+              // 暂时仍然导出为 PNG，并提示用户需要进一步处理
+              resolve(pngBlob)
+            } else {
+              reject(new Error("转换失败"))
+            }
+          }, 'image/png')
+        } else {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error("转换失败"))
+          }, mime)
+        }
       })
 
       // 创建下载链接
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `converted.${format}`
+      a.download = format === 'ico' 
+        ? `icon.png`  // 暂时仍然使用 PNG 扩展名
+        : `converted.${format}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
       setShowFormatDialog(false)
-      toast({
-        title: "转换成功",
-        description: `图片已转换为 ${format.toUpperCase()} 格式`,
-      })
+      
+      if (format === 'ico') {
+        toast({
+          title: "转换提示",
+          description: "已将图片调整为 32x32 并导出为 PNG 格式。要获得真正的 ICO 文件，请使用专门的图标转换工具进行进一步处理。",
+        })
+      } else {
+        toast({
+          title: "转换成功",
+          description: `图片已转换为 ${format.toUpperCase()} 格式`,
+        })
+      }
     } catch (err) {
       const error = handleError(err)
       setError(error)
@@ -269,7 +308,7 @@ export function ImageUpload() {
       )
 
       toast({
-        title: "粘贴成���",
+        title: "粘贴成功",
         description: `已从剪贴板添加 ${files.length} 张图片`,
       })
     } catch (err) {

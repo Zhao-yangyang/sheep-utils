@@ -1,0 +1,24 @@
+{
+  "name": "Sheep Utils - 在线工具集",
+  "short_name": "Sheep Utils",
+  "description": "功能强大的在线工具集，提供图片处理、SVG编辑等实用工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "productivity"],
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+} 

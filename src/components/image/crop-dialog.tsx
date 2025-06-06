@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useState, useCallback } from "react"
-import ReactCrop, { Crop } from 'react-image-crop'
+import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UploadZone } from "@/components/svg-editor/upload-zone";
 import { SettingsPanel } from "@/components/svg-editor/settings-panel";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { safeJsonStringify } from "@/lib/json-utils";
 import { toast } from "@/hooks/use-toast";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -29,6 +31,34 @@ const formatSvg = async (code: string) => {
     xmlWhitespaceSensitivity: "ignore",
     bracketSameLine: true,
   });
+};
+
+// 结构化数据
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SVG编辑器",
+  "description": "专业的在线SVG编辑器，支持代码编辑、实时预览、格式化、多格式导出",
+  "url": "https://sheep-utils.vercel.app/svg-editor",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "featureList": [
+    "SVG代码编辑",
+    "实时预览",
+    "代码格式化",
+    "语法高亮",
+    "SVG转PNG",
+    "SVG转JPEG",
+    "拖拽上传",
+    "快捷键支持"
+  ],
+  "supportedFormat": ["SVG", "PNG", "JPEG"],
+  "browserRequirements": "Chrome, Firefox, Safari, Edge"
 };
 
 export default function SvgEditorPage() {
@@ -180,9 +210,20 @@ export default function SvgEditorPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-65px)]">
-      <div className="w-full max-w-[1600px] px-4 py-4">
-        <h1 className="text-2xl font-bold mb-4 text-center">SVG 编辑器</h1>
+    <>
+             <script
+         type="application/ld+json"
+         dangerouslySetInnerHTML={{ __html: safeJsonStringify(jsonLd) }}
+       />
+      <div className="h-[calc(100vh-65px)]">
+        <div className="w-full max-w-[1600px] px-4 py-4">
+          <Breadcrumb 
+            items={[
+              { name: "SVG编辑器", href: "/svg-editor" }
+            ]}
+            className="mb-4"
+          />
+          <h1 className="text-2xl font-bold mb-4 text-center">专业SVG编辑器</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* 左侧编辑器面板 */}
@@ -253,7 +294,8 @@ export default function SvgEditorPage() {
             </Card>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

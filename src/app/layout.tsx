@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Toaster } from "@/components/ui/toaster"
+import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}>
+        <GoogleAnalytics />
         <div className="relative flex min-h-screen flex-col">
           <Header />
           <main className="flex-1 flex justify-center">

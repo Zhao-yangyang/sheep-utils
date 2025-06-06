@@ -114,6 +114,9 @@
 - jszip (文件打包)
 - react-hotkeys-hook (快捷键支持)
 
+### 分析工具
+- Google Analytics (用户行为分析)
+
 ### 开发工具
 - ESLint
 - PostCSS
@@ -139,6 +142,7 @@
 - [x] 批量处理功能
 - [x] 键盘快捷键支持
 - [x] 文件打包下载
+- [x] Google Analytics 集成
 
 ### 进行中
 - [ ] 图片滤镜功能
